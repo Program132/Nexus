@@ -1,0 +1,10 @@
+{
+    "linpeas": "https://github.com/peass-ng/PEASS-ng/releases/latest/download/linpeas.sh",
+    "winpeas": "https://github.com/peass-ng/PEASS-ng/releases/latest/download/winPEASany.exe",
+    "pspy64": "https://github.com/DominicBreuker/pspy/releases/latest/download/pspy64",
+    "pspy32": "https://github.com/DominicBreuker/pspy/releases/latest/download/pspy32",
+    "chisel-linux": "https://github.com/jpillora/chisel/releases/download/v1.11.5/chisel_1.11.5_linux_386.deb",
+    "chisel-windows": "https://github.com/jpillora/chisel/releases/download/v1.11.5/chisel_1.11.5_windows_amd64.zip",
+    "ligolo-proxy": "https://github.com/nicocha30/ligolo-ng/releases/download/v0.8.3/ligolo-ng_proxy_0.8.3_linux_amd64.tar.gz",
+    "ligolo-agent": "https://github.com/nicocha30/ligolo-ng/releases/download/v0.8.3/ligolo-ng_agent_0.8.3_linux_amd64.tar.gz"
+}
