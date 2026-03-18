@@ -133,15 +133,41 @@ class DockerManager:
         )
         container.exec_run(["/bin/bash", "-c", source_cmd])
 
-    def open_session(self, workspace_name: str, session_id: str, env: dict = None):
+    def open_session(self, workspace_name: str, session_id: str, env: dict = None, external: bool = False, session_type: str = "interactive"):
+        import sys
         container_name = f"nexus_workspace_{workspace_name}"
-        Logger.log_color(
-            f"┌─ Session '{session_id}' ─ prompt is orange inside ─ 'exit' or Ctrl+D to return",
-            "#ff8c00"
-        )
         env_flags = " ".join(f"-e {k}={v}" for k, v in (env or {}).items())
-        os.system(f'docker exec -it -e TERM=xterm-256color {env_flags} {container_name} bash -l')
-        Logger.log_color("└─ Back in Nexus", "#ff8c00")
+        
+        if session_type == "interactive":
+            try:
+                container = self.client.containers.get(container_name)
+                container.exec_run(["bash", "-c", "which tmux || apt-get install -y tmux >/dev/null 2>&1"])
+                container.exec_run(["bash", "-c", 'echo "set -g status off" > /root/.tmux.conf'])
+                container.exec_run(["bash", "-c", f"tmux new-session -d -s {session_id} bash -l 2>/dev/null"])
+                attach_cmd = f"tmux attach -t {session_id}"
+                exit_hint = "Ctrl+B then D to detach (keeps history), 'exit' to KILL shell"
+            except Exception:
+                attach_cmd = "bash -l"
+                exit_hint = "'exit' or Ctrl+D to return"
+        else:
+            attach_cmd = "bash -l"
+            exit_hint = "'exit' or Ctrl+D to return"
+            
+        full_cmd = f"docker exec -it -e TERM=xterm-256color {env_flags} {container_name} {attach_cmd}"
+        
+        if external and sys.platform == "win32":
+            Logger.info(f"Opening Session '{session_id}' in a new Windows Terminal pane...")
+            import shutil
+            if shutil.which("wt"):
+                os.system(f'wt -p "Command Prompt" --title "Nexus - Session {session_id}" cmd /c "{full_cmd}"')
+            else:
+                os.system(f'start "Nexus - Session {session_id}" cmd /c "{full_cmd}"')
+        else:
+            if external:
+                Logger.warning("External terminal is only supported on Windows currently.")
+            Logger.log_color(f"┌─ Session '{session_id}' ─ prompt is orange inside ─ {exit_hint}", "#ff8c00")
+            os.system(full_cmd)
+            Logger.log_color("└─ Back in Nexus", "#ff8c00")
 
     def run_background_session(self, workspace_name: str, session_id: str, cmd: str) -> bool:
         container_name = f"nexus_workspace_{workspace_name}"
