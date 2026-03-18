@@ -145,12 +145,16 @@ class CommandManager:
 
         if action == "new":
             session_id = args[1] if len(args) > 1 else str(uuid.uuid4())[:8]
+            
+            ans = input("Open this session in a new external terminal window? (y/N): ").strip().lower()
+            external = True if ans in ['y', 'yes', 'true', 't'] else False
+
             workspace.sessions[session_id] = {
                 "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "type": "interactive"
             }
             Logger.success(f"New session created: {session_id}")
-            self.docker_mgr.open_session(workspace.name, session_id, workspace.env)
+            self.docker_mgr.open_session(workspace.name, session_id, workspace.env, external=external, session_type="interactive")
 
         elif action == "bg":
             if len(args) < 3:
@@ -196,7 +200,12 @@ class CommandManager:
                 return
             sess_id = args[1]
             if sess_id in workspace.sessions:
-                self.docker_mgr.open_session(workspace.name, sess_id, workspace.env)
+                sess_type = workspace.sessions[sess_id].get("type", "interactive")
+                
+                ans = input("Open this session in a new external terminal window? (y/N): ").strip().lower()
+                external = True if ans in ['y', 'yes', 'true', 't'] else False
+                
+                self.docker_mgr.open_session(workspace.name, sess_id, workspace.env, external=external, session_type=sess_type)
             else:
                 Logger.error(f"Session '{sess_id}' does not exist.")
 
